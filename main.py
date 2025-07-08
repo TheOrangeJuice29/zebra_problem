@@ -18,3 +18,5 @@ test_state = [
 
 scores = main_func.evaluate_zebra_state(test_state)
 print(scores)
+
+
