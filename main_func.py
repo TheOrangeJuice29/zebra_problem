@@ -1,5 +1,5 @@
 import math
-
+exploration_const = math.sqrt(2)
 known_constraints = ["There are five houses.",
 "The Englishman lives in the red house.",
 "The Spaniard owns the dog.",
@@ -39,7 +39,7 @@ class TreeNode: #this creates node used in the MCTS.
         self.visits = 0 #visit count of i
         self.value = 0 #total reward from those simulations
 
-    def uct_score(self, parent_visits, exploration_const = math.sqrt(2)):
+    def uct_score(self, parent_visits, exploration_const):
         if self.visits == 0:
             return float('inf') #this prioritizes the simulation on unexplored nodes
 
@@ -49,3 +49,7 @@ class TreeNode: #this creates node used in the MCTS.
         return uct_value
 
 
+def select_best_child(node,exploration_const = math.sqrt(2)):
+    parent_visits = node
+    key = lambda child: child.uct_score(parent_visits, exploration_const)
+    return max(node.children, key)
