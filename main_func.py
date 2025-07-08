@@ -1,3 +1,5 @@
+import math
+
 known_constraints = ["There are five houses.",
 "The Englishman lives in the red house.",
 "The Spaniard owns the dog.",
@@ -14,14 +16,6 @@ known_constraints = ["There are five houses.",
 "The Japanese person plays chess.",
 "The Norwegian lives next to the blue house."]
 
-state = [
-    "The Englishman lives in the red house.",
-    "The Norwegian lives in the first house.",
-    "The Ukrainian drinks tea."
-]
-
-def count_constraints(state):
-    pass
 
 def evaluate_zebra_state(state):
     """Take a list of natural langauage facts that are strings
@@ -29,9 +23,29 @@ def evaluate_zebra_state(state):
 
     score = 0
 
-    for constraint in known_constraints:
-        if constraint in state:
+    for constraint in known_constraints: #iterates through known constraints
+        if constraint in state: #check if the constraint in in the state_list
             score += 1
         else:
             continue
     return score
+
+
+class TreeNode: #this creates node used in the MCTS.
+    def __init__(self, state, parent = None):
+        self.state = state
+        self.parent = parent #link to the parent node
+        self.children = [] #list of children
+        self.visits = 0 #visit count of i
+        self.value = 0 #total reward from those simulations
+
+    def uct_score(self, parent_visits, exploration_const = math.sqrt(2)):
+        if self.visits == 0:
+            return float('inf') #this prioritizes the simulation on unexplored nodes
+
+        average_reward = self.value / self.visits
+        exploitation = exploration_const * math.sqrt((math.log(parent_visits))/self.visits)
+        uct_value = average_reward + exploitation
+        return uct_value
+
+
