@@ -50,9 +50,8 @@ class TreeNode: #this creates node used in the MCTS.
 
 
 def select_best_child(node): #function to choos the the best child node 
-    parent_visits = node #vists to the parent node
-    key = lambda child: child.uct_score(parent_visits, exploration_const) #lambda function for getting the uct score
-    return max(node.children, key)
+    parent_visits = node.visits #vists to the parent node
+    return max(node.children, key = lambda child: child.uct_score(parent_visits, exploration_const)) #lambda function for getting the uct score
 
 def tree_policy(root):
     node = root

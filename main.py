@@ -26,7 +26,7 @@ root.visits = 100
 
 child_a = main_func.TreeNode(state = test_state + ["The person in the middle house drinks milk."], parent = root)
 child_a.visits = 50
-child_a.value = 33.5
+child_a.value = 33.
 
 child_b = main_func.TreeNode(state = test_state + ["The Spaniard owns the dog."], parent = root)
 child_b.visits = 10
@@ -41,5 +41,5 @@ root.children = [child_a, child_b, child_c]
 selected = main_func.select_best_child(root)
 print("Selected child: ")
 
-for character in selected:
+for character in selected.state:
     print(character)
