@@ -112,8 +112,8 @@ def mock_llm_reasoner(state):
             return fact
     return None  # no new facts left
 
-def expand_node(node, llm_call):
-    new_fact = llm_call(node.state)
+def expand_node(node, llm_func):
+    new_fact = llm_func(node.state)
 
     if new_fact in node.state:
         return None
@@ -124,3 +124,5 @@ def expand_node(node, llm_call):
     child = TreeNode(state = new_state, parent = node)
     node.children.append(child)
     return child
+
+
