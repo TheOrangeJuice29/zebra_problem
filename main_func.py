@@ -1,7 +1,11 @@
 import math
-import openai
+from openai import OpenAI
 import logging
 
+client = OpenAI(api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
+                        "qTJIvlmrt02m68R0C8S3jSYI1zGrmuk5XTmek67-8By4GfOG2y-_" \
+                        "dg9QT3BlbkFJzzKBKg73kFfudXJ8xyWPH7SZAO42w7VpjQ-" \
+                        "jsn9So3rW-5NgQPfttS8AiLkTSTzmOtpfrDhlcA")
 
 exploration_const = math.sqrt(2)
 known_constraints = ["There are five houses.",
@@ -64,18 +68,17 @@ def tree_policy(root):
     return node
 
 
-openai.api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
+"""openai.api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
                 "qTJIvlmrt02m68R0C8S3jSYI1zGrmuk5XTmek67-8By4GfOG2y-_" \
                 "dg9QT3BlbkFJzzKBKg73kFfudXJ8xyWPH7SZAO42w7VpjQ-jsn9So3rW-" \
-                "5NgQPfttS8AiLkTSTzmOtpfrDhlcA"
+                "5NgQPfttS8AiLkTSTzmOtpfrDhlcA"""
 
 
 def llm_call(state):
     formatted_state = "\n".join(f"- {statement}" for statement in state)
 
     #this is the prompt instructing the model to generate a solution
-    prompt = f"""
-    You are solving the Zebra Puzzle. The current known facts are:
+    prompt = f"""You are solving the Zebra Puzzle. The current known facts are:
 
     {formatted_state}
 
@@ -83,7 +86,7 @@ def llm_call(state):
     Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
     """
 
-    gpt_response = openai.ChatCompletion.create(
+    gpt_response = client.chat.completions.create(
         model = "gpt-4",
         messages = [
             {"role": "system", "content": "You are an expert logic reasoner."},
@@ -94,7 +97,7 @@ def llm_call(state):
         )
     
 
-    new_fact = gpt_response["choices"][0]["message"]["content"].strip()
+    new_fact = gpt_response.choices[0].message.content.strip()
     return new_fact
 
 
@@ -150,7 +153,7 @@ def simulate_full_solution(state):
     Make sure your answer is logically consistent with the facts.
     """
 
-    gpt_response = openai.ChatCompletion.create(
+    gpt_response = client.chat.completions.create(
     model = "gpt-4",
     messages = [
         {"role": "system", "content": "You are an expert logic reasoner."},
@@ -161,7 +164,7 @@ def simulate_full_solution(state):
     )
 
     try:
-        full_solution = gpt_response["choices"][0]["message"]["content"].strip()
+        full_solution = gpt_response.choices[0].message.content.strip()
         return full_solution
     except Exception:
         logging.info("Parsing was unsuccessful")

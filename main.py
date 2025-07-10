@@ -43,3 +43,14 @@ print("Selected child: ")
 
 for character in selected.state:
     print(character)
+
+
+partial_state = [
+    "The Englishman lives in the red house.",
+    "The Norwegian lives in the first house.",
+    "The Ukrainian drinks tea."
+]
+
+solution = main_func.simulate_full_solution(partial_state)
+for i, house in enumerate(solution):
+    print(f"House {i+1}: {house}")
