@@ -1,4 +1,5 @@
 import math
+import openai
 exploration_const = math.sqrt(2)
 known_constraints = ["There are five houses.",
 "The Englishman lives in the red house.",
@@ -59,3 +60,67 @@ def tree_policy(root):
         node = select_best_child(node)
     return node
 
+
+openai.api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
+                "qTJIvlmrt02m68R0C8S3jSYI1zGrmuk5XTmek67-8By4GfOG2y-_" \
+                "dg9QT3BlbkFJzzKBKg73kFfudXJ8xyWPH7SZAO42w7VpjQ-jsn9So3rW-" \
+                "5NgQPfttS8AiLkTSTzmOtpfrDhlcA"
+
+
+def llm_call(state):
+    formatted_state = "\n".join(f"-{statement}" for statement in state)
+
+    prompt = f"""
+    You are solving the Zebra Puzzle. The current known facts are:
+
+    {formatted_state}
+
+    What is one new logical deduction you can make based on this state?
+    Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
+    """
+
+    gpt_response = openai.ChatCompletion.create(
+        model = "gpt-4",
+        messages = [
+            {"role": "system", "content": "You are an expert logic reasoner."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature = 0.7,
+        max_tokens = 50
+        )
+    
+
+    new_fact = gpt_response["choices"][0]["message"]["content"].strip()
+    return new_fact
+
+
+def mock_llm_reasoner(state):
+    """Dummy function for testing — replace with actual LLM later."""
+    all_possible_facts = [
+        "The Englishman lives in the red house.",
+        "The Spaniard owns the dog.",
+        "The person in the green house drinks coffee.",
+        "The Ukrainian drinks tea.",
+        "The person in the middle house drinks milk.",
+        "The Norwegian lives in the first house.",
+        "The Japanese person plays chess.",
+        # Add more if needed
+    ]
+    # Return a new fact not already in state
+    for fact in all_possible_facts:
+        if fact not in state:
+            return fact
+    return None  # no new facts left
+
+def expand_node(node, llm_call):
+    new_fact = llm_call(node.state)
+
+    if new_fact in node.state:
+        return None
+    
+    new_state = node.state.copy()
+    new_state.append(new_fact)
+
+    child = TreeNode(state = new_state, parent = node)
+    node.children.append(child)
+    return child
