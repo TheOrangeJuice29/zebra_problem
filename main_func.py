@@ -71,8 +71,9 @@ openai.api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
 
 
 def llm_call(state):
-    formatted_state = "\n".join(f"-{statement}" for statement in state)
+    formatted_state = "\n".join(f"- {statement}" for statement in state)
 
+    #this is the prompt instructing the model to generate a solution
     prompt = f"""
     You are solving the Zebra Puzzle. The current known facts are:
 
@@ -130,11 +131,23 @@ def expand_node(node, llm_func):
 
 
 def simulate_full_solution(state):
-    formatted_state = "\n".join(f"-{statement}" for statement in state)
+    formatted_state = "\n".join(f"- {statement}" for statement in state)
     
+    #this is the prompt instructing the model to generate a solution
     prompt = f"""These are the current facts:
     
     {formatted_state}
+    
+    Based on this, complete the full assignment of all five houses.
+    List each house with its color, nationality, drink, smoke, and pet.
+
+    Format it exactly as a Python-style list of 5 dictionaries. For example:
+    [
+    {{"color": "red", "nationality": "Englishman", "drink": "milk", "smoke": "Pall Mall", "pet": "dog"}},
+    ...
+    ]
+
+    Make sure your answer is logically consistent with the facts.
     """
 
     gpt_response = openai.ChatCompletion.create(
