@@ -89,19 +89,8 @@ def llm_call(state):
     Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
     """
 
-    gpt_response = client.chat.completions.create(
-        model = "gpt-3.5-turbo",
-        messages = [
-            {"role": "system", "content": "You are an expert logic reasoner."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature = 0.7, #more random
-        max_tokens = 50
-        )
-    
-
-    new_fact = gpt_response.choices[0].message.content.strip()
-    return new_fact
+    response = gemini_api.model.generate_content(prompt)
+    return response.text.strip()
 
 
 def mock_llm_reasoner(state):
@@ -156,18 +145,10 @@ def simulate_full_solution(state):
     Make sure your answer is logically consistent with the facts.
     """
 
-    gpt_response = client.chat.completions.create(
-    model = "gpt-3.5-turbo",
-    messages = [
-        {"role": "system", "content": "You are an expert logic reasoner."},
-        {"role": "user", "content": prompt}
-    ],
-    temperature = 0.2, #less random
-    max_tokens = 500
-    )
+    response = gemini_api.model.generate_content(prompt)
 
     try:
-        full_solution = gpt_response.choices[0].message.content.strip()
+        full_solution = response.text.strip()
         return full_solution
     except Exception:
         logging.info("Parsing was unsuccessful")
