@@ -1,12 +1,6 @@
 import math
-from openai import OpenAI
 import logging
-import gemini_api
-
-client = OpenAI(api_key = "sk-proj-WKQHf5ys3HuEVmyek3syIZbiFYjdYTBMdWJ6cqkIf0ZIaSZU5VCxmhpvERpwC6_" \
-                        "tJuU701B8cOT3BlbkFJc0LZTARNjutWJuVvn8Qe0" \
-                        "qdeJu0BGPHG3Fk5KRL5EJbLrnk1SoUO6yaAgZovdg2C-" \
-                        "7P9l0PssA")
+from gemini_api import model
 
 
 exploration_const = math.sqrt(2)
@@ -71,10 +65,7 @@ def tree_policy(root):
 
 
 
-"""openai.api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
-                "qTJIvlmrt02m68R0C8S3jSYI1zGrmuk5XTmek67-8By4GfOG2y-_" \
-                "dg9QT3BlbkFJzzKBKg73kFfudXJ8xyWPH7SZAO42w7VpjQ-jsn9So3rW-" \
-                "5NgQPfttS8AiLkTSTzmOtpfrDhlcA"""
+
 
 
 def llm_call(state):
@@ -89,7 +80,7 @@ def llm_call(state):
     Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
     """
 
-    response = gemini_api.model.generate_content(prompt)
+    response = model.generate_content(prompt)
     return response.text.strip()
 
 
@@ -145,7 +136,7 @@ def simulate_full_solution(state):
     Make sure your answer is logically consistent with the facts.
     """
 
-    response = gemini_api.model.generate_content(prompt)
+    response = model.generate_content(prompt)
 
     try:
         full_solution = response.text.strip()

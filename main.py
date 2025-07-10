@@ -43,3 +43,12 @@ print("Selected child: ")
 
 for character in selected.state:
     print(character)
+
+
+# Test single LLM deduction
+fact = main_func.llm_call(test_state)
+print("🔍 New deduction:", fact)
+
+# Test full solution generation
+solution = main_func.simulate_full_solution(test_state)
+print("🏠 Full solution:\n", solution)
