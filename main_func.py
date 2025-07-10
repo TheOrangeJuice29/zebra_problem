@@ -1,5 +1,8 @@
 import math
 import openai
+import logging
+
+
 exploration_const = math.sqrt(2)
 known_constraints = ["There are five houses.",
 "The Englishman lives in the red house.",
@@ -85,7 +88,7 @@ def llm_call(state):
             {"role": "system", "content": "You are an expert logic reasoner."},
             {"role": "user", "content": prompt}
         ],
-        temperature = 0.7,
+        temperature = 0.7, #more random
         max_tokens = 50
         )
     
@@ -126,3 +129,27 @@ def expand_node(node, llm_func):
     return child
 
 
+def simulate_full_solution(state):
+    formatted_state = "\n".join(f"-{statement}" for statement in state)
+    
+    prompt = f"""These are the current facts:
+    
+    {formatted_state}
+    """
+
+    gpt_response = openai.ChatCompletion.create(
+    model = "gpt-4",
+    messages = [
+        {"role": "system", "content": "You are an expert logic reasoner."},
+        {"role": "user", "content": prompt}
+    ],
+    temperature = 0.2, #less random
+    max_tokens = 500
+    )
+
+    try:
+        full_solution = gpt_response["choices"][0]["message"]["content"].strip()
+        return full_solution
+    except Exception:
+        logging.info("Parsing was unsuccessful")
+        return None
