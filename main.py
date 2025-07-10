@@ -45,12 +45,10 @@ for character in selected.state:
     print(character)
 
 
-partial_state = [
-    "The Englishman lives in the red house.",
-    "The Norwegian lives in the first house.",
-    "The Ukrainian drinks tea."
-]
+# Test single LLM deduction
+fact = main_func.llm_call(test_state)
+print("🔍 New deduction:", fact)
 
-solution = main_func.simulate_full_solution(partial_state)
-for i, house in enumerate(solution):
-    print(f"House {i+1}: {house}")
+# Test full solution generation
+solution = main_func.simulate_full_solution(test_state)
+print("🏠 Full solution:\n", solution)

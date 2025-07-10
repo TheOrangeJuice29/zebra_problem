@@ -1,11 +1,7 @@
 import math
-from openai import OpenAI
 import logging
+from gemini_api import model
 
-client = OpenAI(api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
-                        "qTJIvlmrt02m68R0C8S3jSYI1zGrmuk5XTmek67-8By4GfOG2y-_" \
-                        "dg9QT3BlbkFJzzKBKg73kFfudXJ8xyWPH7SZAO42w7VpjQ-" \
-                        "jsn9So3rW-5NgQPfttS8AiLkTSTzmOtpfrDhlcA")
 
 exploration_const = math.sqrt(2)
 known_constraints = ["There are five houses.",
@@ -68,10 +64,8 @@ def tree_policy(root):
     return node
 
 
-"""openai.api_key = "sk-proj-Gs9DbSOuwieZWV9nP_" \
-                "qTJIvlmrt02m68R0C8S3jSYI1zGrmuk5XTmek67-8By4GfOG2y-_" \
-                "dg9QT3BlbkFJzzKBKg73kFfudXJ8xyWPH7SZAO42w7VpjQ-jsn9So3rW-" \
-                "5NgQPfttS8AiLkTSTzmOtpfrDhlcA"""
+
+
 
 
 def llm_call(state):
@@ -86,19 +80,8 @@ def llm_call(state):
     Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
     """
 
-    gpt_response = client.chat.completions.create(
-        model = "gpt-4",
-        messages = [
-            {"role": "system", "content": "You are an expert logic reasoner."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature = 0.7, #more random
-        max_tokens = 50
-        )
-    
-
-    new_fact = gpt_response.choices[0].message.content.strip()
-    return new_fact
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
 
 def mock_llm_reasoner(state):
@@ -153,19 +136,12 @@ def simulate_full_solution(state):
     Make sure your answer is logically consistent with the facts.
     """
 
-    gpt_response = client.chat.completions.create(
-    model = "gpt-4",
-    messages = [
-        {"role": "system", "content": "You are an expert logic reasoner."},
-        {"role": "user", "content": prompt}
-    ],
-    temperature = 0.2, #less random
-    max_tokens = 500
-    )
+    response = model.generate_content(prompt)
 
     try:
-        full_solution = gpt_response.choices[0].message.content.strip()
+        full_solution = response.text.strip()
         return full_solution
     except Exception:
         logging.info("Parsing was unsuccessful")
         return None
+
