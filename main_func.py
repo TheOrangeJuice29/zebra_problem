@@ -83,14 +83,29 @@ def llm_call(state):
 
     {formatted_state}
 
-    Your task: deduce one new logical fact based on this state.
-    If it is possible to logically deduce who drinks water or who owns the zebra, prioritize deducing that fact.
-    Otherwise, deduce any other logically valid fact.
-    Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
+    Based only on these facts, deduce one new logically valid fact.
+    Prioritize figuring out:
+    - Who drinks water
+    - Who owns the zebra
+
+    If no deduction is possible yet, infer any fact logically implied by the current state.
+
+    Respond with a single new fact in natural language, no explanation.
     """
 
     response = model.generate_content(prompt)
     return response.text.strip()
+
+llm_cache = {}
+
+def cached_llm_call(state):
+    state_key = tuple(sorted(state))
+    if state_key in llm_cache:
+        return llm_cache[state_key]
+    
+    result = llm_call(state)
+    llm_cache[state_key] = result
+    return result
 
 
 def mock_llm_reasoner(state):
