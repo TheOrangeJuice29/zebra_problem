@@ -1,14 +1,16 @@
 import math
 import logging
-from gemini_api import model
+from gemini_api import model #gemini API for LLM calls
 import time
 import hashlib
 import json
 import os
 
 
-exploration_const = math.sqrt(2)
-known_constraints = ["There are five houses.",
+exploration_const = math.sqrt(2) #exploration const for the UCT formula
+
+
+known_constraints = ["There are five houses.", #known constraints for the problem
 "The Englishman lives in the red house.",
 "The Spaniard owns the dog.",
 "The person in the green house drinks coffee.",
@@ -25,13 +27,10 @@ known_constraints = ["There are five houses.",
 "The Norwegian lives next to the blue house."]
 
 
-def evaluate_zebra_state(state):
-    """Take a list of natural langauage facts that are strings
-        and returns how many of those match the constraints"""
-
+def evaluate_zebra_state(state): #scores given to a state based on facts and goals
     score = 0
 
-    if any("drinks water" in fact for fact in state):
+    if any("drinks water" in fact for fact in state): #rewards higher for deducing key facts
         score += 10
 
     if any("owns the zebra" in fact for fact in state):
@@ -53,7 +52,7 @@ class TreeNode: #this creates node used in the MCTS.
         self.visits = 0 #visit count of i
         self.value = 0 #total reward from those simulations
 
-    def uct_score(self, parent_visits, exploration_const):
+    def uct_score(self, parent_visits, exploration_const): #upper confidence bound score found
         if self.visits == 0:
             return float('inf') #this prioritizes the simulation on unexplored nodes
 
@@ -67,7 +66,7 @@ def select_best_child(node): #function to choos the the best child node
     parent_visits = node.visits #vists to the parent node
     return max(node.children, key = lambda child: child.uct_score(parent_visits, exploration_const)) #lambda function for getting the uct score
 
-def tree_policy(root):
+def tree_policy(root): #descends the tree until it reaches a leaf
     node = root
     while node.children: #goes through the children, picking the best one
         node = select_best_child(node)
@@ -78,7 +77,7 @@ def tree_policy(root):
 
 
 
-def llm_call(state):
+def llm_call(state): #sends the current state to the LLM, asking it to deduce a new fact
     formatted_state = "\n".join(f"- {statement}" for statement in state)
 
     #this is the prompt instructing the model to generate a solution
@@ -99,7 +98,7 @@ def llm_call(state):
     response = model.generate_content(prompt)
     return response.text.strip()
 
-llm_cache = {}
+llm_cache = {} #dictionary made to cache LLM repsonses. Avoids redundant calls
 
 
 # Simple JSON cache file
@@ -112,21 +111,21 @@ if os.path.exists(CACHE_FILE):
 else:
     llm_cache = {}
 
-def save_cache():
+def save_cache(): #saves the updated cache to the disk
     with open(CACHE_FILE, "w") as f:
         json.dump(llm_cache, f, indent=2)
 
 
 
-def cached_llm_call(state):
+def cached_llm_call(state): #llm call. avoids redundant calls for already seen states
     #creates unique hash of the state as cache key
     state_str = "\n".join(sorted(state))
 
-    state_hash = hashlib.md5(state_str.encode()).hexdigest()
+    state_hash = hashlib.md5(state_str.encode()).hexdigest() #unique MD5 cache made of the stringified state as a cache key
 
     
-    if state_hash in llm_cache:
-        return llm_cache[state_hash]
+    if state_hash in llm_cache: #checks if state already processed and cached
+        return llm_cache[state_hash] #if so , get the cached result, not calling the LLM
     
     result = llm_call(state)
     llm_cache[state_hash] = result
@@ -135,7 +134,7 @@ def cached_llm_call(state):
     return result
 
 
-def mock_llm_reasoner(state):
+def mock_llm_reasoner(state): #mock reasoner for testing without the LLM
     """Dummy function for testing — replace with actual LLM later."""
     all_possible_facts = [
         "The Englishman lives in the red house.",
@@ -153,14 +152,14 @@ def mock_llm_reasoner(state):
             return fact
     return None  # no new facts left
 
-def expand_node(node, llm_func):
-    time.sleep(5)
+def expand_node(node, llm_func): #generates a new child by deducing a new fact
+    time.sleep(5) #pause added here for the Gemini API rate limits
     new_fact = llm_func(node.state)
 
-    if new_fact in node.state:
+    if new_fact in node.state: #if the fact is already known. done to avoid any loops
         return None
     
-    new_state = node.state.copy()
+    new_state = node.state.copy() #new state made by copying ther current one and adding new fact
     new_state.append(new_fact)
 
     child = TreeNode(state = new_state, parent = node)
@@ -168,7 +167,7 @@ def expand_node(node, llm_func):
     return child
 
 
-def simulate_full_solution(state):
+def simulate_full_solution(state): #final solution prompt. asks the LLM to get both key facts if possible
     formatted_state = "\n".join(f"- {statement}" for statement in state)
     
     #this is the prompt instructing the model to generate a solution
@@ -199,13 +198,13 @@ def simulate_full_solution(state):
         logging.info("Parsing was unsuccessful")
         return None
 
-def back_prop(node, reward):
+def back_prop(node, reward): #propogates the simulation back up the tree
     while node:
         node.visits += 1
         node.value += reward
         node = node.parent
 
-def best_final_state(root):
+def best_final_state(root): #returns the best final state via the root's children
     best_state = max(root.children, key = lambda c: 
                      c.value / c.visits if c.visits 
                      else 0, 
@@ -213,17 +212,18 @@ def best_final_state(root):
     
     return best_state.state if best_state else root.state
 
-def run_mcts(root, iterations, llm_func):
+def run_mcts(root, iterations, llm_func): #runs the monte carlo tree
     for iter in range(iterations):
-        leaf = tree_policy(root)
-        child = expand_node(leaf, llm_func)
+        leaf = tree_policy(root) #picks a good node to expand
+        child = expand_node(leaf, llm_func) #LLM used to make a new fact from the current state. node expanded
 
         if child is None:
             continue
 
-        reward = evaluate_zebra_state(child.state)
+        reward = evaluate_zebra_state(child.state) #checks how good the state is
+        
         back_prop(child, reward)
-
+        #checks if both key facts are found. if so, early stops
         if any("drinks water" in fact for fact in child.state) and any("owns the zebra" in fact for fact in child.state):
             print(f"Early stopping at iteration {iter}")
             return child.state
