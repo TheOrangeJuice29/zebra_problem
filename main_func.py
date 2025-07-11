@@ -2,6 +2,9 @@ import math
 import logging
 from gemini_api import model
 import time
+import hashlib
+import json
+import os
 
 
 exploration_const = math.sqrt(2)
@@ -98,13 +101,37 @@ def llm_call(state):
 
 llm_cache = {}
 
+
+# Simple JSON cache file
+CACHE_FILE = "llm_cache.json"
+
+# Load cache if exists
+if os.path.exists(CACHE_FILE):
+    with open(CACHE_FILE, "r") as f:
+        llm_cache = json.load(f)
+else:
+    llm_cache = {}
+
+def save_cache():
+    with open(CACHE_FILE, "w") as f:
+        json.dump(llm_cache, f, indent=2)
+
+
+
 def cached_llm_call(state):
-    state_key = tuple(sorted(state))
-    if state_key in llm_cache:
-        return llm_cache[state_key]
+    #creates unique hash of the state as cache key
+    state_str = "\n".join(sorted(state))
+
+    state_hash = hashlib.md5(state_str.encode()).hexdigest()
+
+    
+    if state_hash in llm_cache:
+        return llm_cache[state_hash]
     
     result = llm_call(state)
-    llm_cache[state_key] = result
+    llm_cache[state_hash] = result
+
+    save_cache()
     return result
 
 
@@ -149,16 +176,18 @@ def simulate_full_solution(state):
     
     {formatted_state}
     
-    Based on this, complete the full assignment of all five houses.
-    List each house with its color, nationality, drink, smoke, and pet.
+    Based on this, answer the following questions:
+    - Who drinks water
+    - Who owns the zebra
 
-    Format it exactly as a Python-style list of 5 dictionaries. For example:
-    [
-    {{"color": "red", "nationality": "Englishman", "drink": "milk", "smoke": "Pall Mall", "pet": "dog"}},
-    ...
-    ]
-
+    Answer exactly like this if you're able to deduce them:
+    "The [nationality] drinks water, and the [nationality] owns the zebra."
     Make sure your answer is logically consistent with the facts.
+
+    If you cannot deduce one or both, say:
+    "Not enough information."
+
+    Do not explain your reasoning — only respond with the final sentence(s).
     """
 
     response = model.generate_content(prompt)
@@ -198,5 +227,5 @@ def run_mcts(root, iterations, llm_func):
         if any("drinks water" in fact for fact in child.state) and any("owns the zebra" in fact for fact in child.state):
             print(f"Early stopping at iteration {iter}")
             return child.state
-
+    save_cache()
     return best_final_state(root)
