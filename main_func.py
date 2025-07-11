@@ -1,6 +1,7 @@
 import math
 import logging
 from gemini_api import model
+import time
 
 
 exploration_const = math.sqrt(2)
@@ -26,6 +27,12 @@ def evaluate_zebra_state(state):
         and returns how many of those match the constraints"""
 
     score = 0
+
+    if any("drinks water" in fact for fact in state):
+        score += 10
+
+    if any("owns the zebra" in fact for fact in state):
+        score += 10
 
     for constraint in known_constraints: #iterates through known constraints
         if constraint in state: #check if the constraint in in the state_list
@@ -76,7 +83,9 @@ def llm_call(state):
 
     {formatted_state}
 
-    What is one new logical deduction you can make based on this state?
+    Your task: deduce one new logical fact based on this state.
+    If it is possible to logically deduce who drinks water or who owns the zebra, prioritize deducing that fact.
+    Otherwise, deduce any other logically valid fact.
     Respond with a single fact in natural language (e.g., "The Spaniard owns the dog.") without explanation.
     """
 
@@ -103,6 +112,7 @@ def mock_llm_reasoner(state):
     return None  # no new facts left
 
 def expand_node(node, llm_func):
+    time.sleep(5)
     new_fact = llm_func(node.state)
 
     if new_fact in node.state:
@@ -145,3 +155,33 @@ def simulate_full_solution(state):
         logging.info("Parsing was unsuccessful")
         return None
 
+def back_prop(node, reward):
+    while node:
+        node.visits += 1
+        node.value += reward
+        node = node.parent
+
+def best_final_state(root):
+    best_state = max(root.children, key = lambda c: 
+                     c.value / c.visits if c.visits 
+                     else 0, 
+                     default = None)
+    
+    return best_state.state if best_state else root.state
+
+def run_mcts(root, iterations, llm_func):
+    for iter in range(iterations):
+        leaf = tree_policy(root)
+        child = expand_node(leaf, llm_func)
+
+        if child is None:
+            continue
+
+        reward = evaluate_zebra_state(child.state)
+        back_prop(child, reward)
+
+        if any("drinks water" in fact for fact in child.state) and any("owns the zebra" in fact for fact in child.state):
+            print(f"Early stopping at iteration {iter}")
+            return child.state
+
+    return best_final_state(root)

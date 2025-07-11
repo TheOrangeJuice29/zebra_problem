@@ -2,53 +2,13 @@ import main_func
 
 
 
-#scores = main_func.evaluate_zebra_state(sample_state)
-#print(scores)
-#print("Hello")
+initial_state = []
+root = main_func.TreeNode(state=[])
+best_state = main_func.run_mcts(root, iterations=20, llm_func=main_func.llm_call)  # try 50–75
+print("\nFinal deduced state:")
+for fact in best_state:
+    print(f"- {fact}")
 
-
-test_state = [
-    "The Englishman lives in the red house.",
-    "The Norwegian lives in the first house.",
-    "The Ukrainian drinks tea."
-]
-
-
-
-
-scores = main_func.evaluate_zebra_state(test_state)
-print(scores)
-
-
-root = main_func.TreeNode(state = test_state)
-root.visits = 100
-
-
-child_a = main_func.TreeNode(state = test_state + ["The person in the middle house drinks milk."], parent = root)
-child_a.visits = 50
-child_a.value = 33.
-
-child_b = main_func.TreeNode(state = test_state + ["The Spaniard owns the dog."], parent = root)
-child_b.visits = 10
-child_b.value = 8
-
-child_c = main_func.TreeNode(state=test_state + ["The Japanese person plays chess."], parent=root)
-child_c.visits = 0
-child_c.value = 0.0
-
-root.children = [child_a, child_b, child_c]
-
-selected = main_func.select_best_child(root)
-print("Selected child: ")
-
-for character in selected.state:
-    print(character)
-
-
-# Test single LLM deduction
-fact = main_func.llm_call(test_state)
-print("🔍 New deduction:", fact)
-
-# Test full solution generation
-solution = main_func.simulate_full_solution(test_state)
-print("🏠 Full solution:\n", solution)
+solution = main_func.simulate_full_solution(best_state)
+print("\nFull solution:")
+print(solution)
