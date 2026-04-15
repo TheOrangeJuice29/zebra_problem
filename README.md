@@ -10,10 +10,10 @@ Expands on new fact by calling to an LLM to deduce logically consistent based on
 rewards based on how many constraints are satisfied and whether the key facts were deduced. Early stops if both target 
 facts are found.
 
-The LLM integration uses very carefulyl made prompt to guid the LLM, Gemini API, to deduce one new fact per state, and
+The LLM integration uses very a carefully made prompt to guid the LLM, Gemini API, to deduce one new fact per state, and
 caches LLM responses to avoid redundant calls and reduce computation time.
 
-Starts with the 15 constraints. It then selects a promising node using UCT, deduces a new fact using the LLM, and adds the new state
+Starts with the 15 constraints. It then selects a promising node using UCB, deduces a new fact using the LLM, and adds the new state
 as a child node.
 There is reward evaluation as well, rewarding based on how many known constraints they satisfy, and there is extra reward if the key facts are deduced.
 
